@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>لوحة التحكم — فكرة•تِك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #6c5ce7;
+  --primary-dark: #4834d4;
+  --accent: #00cec9;
+  --success: #00b894;
+  --warning: #fdcb6e;
+  --danger: #d63031;
+  --bg: #08081a;
+  --bg-card: #13132e;
+  --bg-elevated: #1a1a3e;
+  --text: #f5f5ff;
+  --text-soft: #b8b8d4;
+  --text-muted: #6f6f96;
+  --border: rgba(255,255,255,0.07);
+  --radius: 16px;
+}
+body {
+  font-family: 'Cairo', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+.hidden { display: none !important; }
+
+/* ═══════ الأزرار ═══════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .7rem 1.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+  border: none;
+  transition: all .25s ease;
+  font-size: .92rem;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(108,92,231,0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,92,231,0.55); }
+.btn-ghost {
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn-small { padding: .4rem 1rem; font-size: .82rem; background: var(--primary); color: #fff; border-radius: 8px; }
+.btn-full { width: 100%; }
+
+/* ═══════ شاشة الدخول ═══════ */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(108,92,231,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, rgba(0,206,201,0.15) 0%, transparent 60%),
+    var(--bg);
+}
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+.login-card .brand-mark {
+  width: 60px; height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #fff;
+  margin: 0 auto 1.2rem;
+  box-shadow: 0 8px 30px rgba(108,92,231,0.4);
+}
+.login-card h1 { font-size: 1.5rem; margin-bottom: .4rem; font-weight: 800; }
+.login-card .sub { color: var(--text-muted); margin-bottom: 2rem; font-size: .9rem; }
+.login-card form { display: flex; flex-direction: column; gap: .8rem; }
+.login-card input {
+  width: 100%;
+  padding: .9rem 1.1rem;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: .95rem;
+  transition: all .25s;
+}
+.login-card input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(108,92,231,0.15);
+}
+.login-error {
+  color: var(--danger);
+  font-size: .85rem;
+  margin-top: .8rem;
+  min-height: 1.2em;
+}
+.back-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: var(--text-muted);
+  font-size: .85rem;
+  transition: color .2s;
+  font-weight: 600;
+}
+.back-link:hover { color: var(--accent); }
+
+/* ═══════ لوحة التحكم ═══════ */
+.dashboard { padding: 1.5rem 5% 4rem; max-width: 1400px; margin: 0 auto; }
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.admin-header h1 { font-size: 1.4rem; font-weight: 800; }
+.header-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+/* ═══════ بطاقات الإحصائيات ═══════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.stats-time { margin-bottom: 2.5rem; }
+.stat-card {
+  background: linear-gradient(180deg, var(--bg-card), rgba(19,19,46,0.5));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.3rem;
+  transition: all .25s;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 3px; height: 100%;
+  background: linear-gradient(180deg, var(--primary), var(--accent));
+  opacity: 0;
+  transition: opacity .25s;
+}
+.stat-card:hover {
+  border-color: rgba(108,92,231,0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.stat-card:hover::before { opacity: 1; }
+.stat-card span {
+  display: block;
+  font-size: .8rem;
+  color: var(--text-muted);
+  margin-bottom: .4rem;
+  font-weight: 600;
+}
+.stat-card strong {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--accent);
+}
+.stats-time .stat-card strong { color: var(--primary); }
+
+/* ═══════ التحليلات ═══════ */
+.analytics-section { margin-bottom: 3rem; }
+.analytics-section h2,
+.requests-section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.2rem;
+}
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+}
+.chart-card h3 {
+  font-size: .95rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+.chart-card canvas { max-height: 260px; }
+.chart-wide { grid-column: 1 / -1; }
+
+.conversion-box {
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, var(--bg-card), rgba(0,206,201,0.05));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  flex-wrap: wrap;
+}
+.conversion-box span { color: var(--text-soft); font-weight: 600; }
+.conversion-box strong { color: var(--success); font-size: 1.7rem; font-weight: 900; }
+.conversion-box small { color: var(--text-muted); font-size: .8rem; }
+
+/* ═══════ الجدول ═══════ */
+.table-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+.requests-table { width: 100%; border-collapse: collapse; min-width: 780px; }
+.requests-table th,
+.requests-table td {
+  padding: 1rem;
+  text-align: right;
+  font-size: .9rem;
+  border-bottom: 1px solid var(--border);
+}
+.requests-table th {
+  background: var(--bg-elevated);
+  font-weight: 700;
+  color: var(--text-soft);
+  font-size: .78rem;
+  letter-spacing: .5px;
+}
+.requests-table tr:last-child td { border-bottom: none; }
+.requests-table tbody tr { transition: background .2s; }
+.requests-table tbody tr:hover td { background: rgba(108,92,231,0.06); }
+
+/* ═══════ شارات الحالة ═══════ */
+.status-badge {
+  display: inline-block;
+  padding: .28rem .8rem;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status-new { background: rgba(0,206,201,0.15); color: var(--accent); }
+.status-contacted { background: rgba(253,203,110,0.15); color: var(--warning); }
+.status-in_discussion { background: rgba(108,92,231,0.2); color: #a29bfe; }
+.status-proposal_sent { background: rgba(9,132,227,0.15); color: #74b9ff; }
+.status-accepted { background: rgba(0,184,148,0.15); color: var(--success); }
+.status-rejected { background: rgba(214,48,49,0.15); color: var(--danger); }
+
+/* ═══════ النافذة المنبثقة ═══════ */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+  animation: fadeIn .25s ease;
+}
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  max-width: 740px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideUp .3s ease;
+}
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: var(--text-soft);
+  font-size: 1.6rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  line-height: 1;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover { background: rgba(214,48,49,0.15); color: var(--danger); }
+.modal-content h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  padding-left: 3rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.detail-grid > div {
+  background: var(--bg-elevated);
+  padding: .9rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.detail-grid label {
+  display: block;
+  font-size: .72rem;
+  color: var(--text-muted);
+  margin-bottom: .25rem;
+  font-weight: 600;
+}
+.detail-grid p { font-size: .9rem; word-break: break-word; }
+
+.detail-section {
+  background: var(--bg-elevated);
+  padding: 1rem 1.2rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+.detail-section label {
+  display: block;
+  font-size: .76rem;
+  color: var(--text-muted);
+  margin-bottom: .4rem;
+  font-weight: 700;
+}
+.detail-section p { font-size: .92rem; line-height: 1.8; white-space: pre-wrap; }
+
+.detail-actions {
+  display: flex;
+  gap: .8rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+.btn-whatsapp { background: linear-gradient(135deg, #25d366, #1eb257); color: #fff; flex: 1; }
+.btn-whatsapp:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(37,211,102,0.4); }
+.btn-call { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; flex: 1; }
+.btn-call:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,92,231,0.4); }
+.btn-email { background: var(--bg-elevated); color: var(--text); border: 1.5px solid var(--border); flex: 1; }
+.btn-email:hover { border-color: var(--accent); color: var(--accent); }
+
+.status-changer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.status-changer label { color: var(--text-soft); font-weight: 700; font-size: .9rem; }
+.status-changer select {
+  flex: 1;
+  min-width: 200px;
+  padding: .8rem 1rem;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: .95rem;
+}
+.status-changer select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(108,92,231,0.15);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ═══════ التجاوب ═══════ */
+@media (max-width: 640px) {
+  .dashboard { padding: 1rem 4% 3rem; }
+  .admin-header h1 { font-size: 1.15rem; }
+  .stat-card strong { font-size: 1.5rem; }
+  .modal-content { padding: 1.5rem; }
+  .detail-actions { flex-direction: column; }
+  .detail-actions .btn { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ شاشة الدخول ═══════ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="brand-mark">🔐</div>
+    <h1>لوحة التحكم</h1>
+    <p class="sub">تسجيل دخول المدير فقط</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required />
+      <input type="password" id="loginPassword" placeholder="كلمة المرور" required />
+      <button type="submit" class="btn btn-primary btn-full">تسجيل الدخول</button>
+    </form>
+    <p id="loginError" class="login-error"></p>
+    <a href="index.html" class="back-link">← العودة للصفحة الرئيسية</a>
+  </div>
+</div>
+
+<!-- ═══════ لوحة التحكم ═══════ -->
+<div id="dashboard" class="dashboard hidden">
+  <header class="admin-header">
+    <h1>📊 لوحة التحكم</h1>
+    <div class="header-actions">
+      <a href="index.html" class="btn btn-ghost">← الصفحة الرئيسية</a>
+      <button id="logoutBtn" class="btn btn-ghost">تسجيل خروج</button>
+    </div>
+  </header>
+
+  <!-- إحصائيات الحالة -->
+  <div class="stats-grid">
+    <div class="stat-card"><span>إجمالي الطلبات</span><strong id="statTotal">0</strong></div>
+    <div class="stat-card"><span>جديد</span><strong id="statNew">0</strong></div>
+    <div class="stat-card"><span>تم التواصل</span><strong id="statContacted">0</strong></div>
+    <div class="stat-card"><span>تحت المناقشة</span><strong id="statDiscussion">0</strong></div>
+    <div class="stat-card"><span>مقبول</span><strong id="statAccepted">0</strong></div>
+    <div class="stat-card"><span>مرفوض</span><strong id="statRejected">0</strong></div>
+  </div>
+
+  <!-- الإحصائيات الزمنية -->
+  <div class="stats-grid stats-time">
+    <div class="stat-card"><span>اليوم</span><strong id="statToday">0</strong></div>
+    <div class="stat-card"><span>هذا الأسبوع</span><strong id="statWeek">0</strong></div>
+    <div class="stat-card"><span>هذا الشهر</span><strong id="statMonth">0</strong></div>
+  </div>
+
+  <!-- التحليلات -->
+  <section class="analytics-section">
+    <h2>📈 التحليلات</h2>
+    <div class="analytics-grid">
+      <div class="chart-card"><h3>الزيارات</h3><canvas id="chartVisitors"></canvas></div>
+      <div class="chart-card"><h3>الطلبات حسب النوع</h3><canvas id="chartType"></canvas></div>
+      <div class="chart-card"><h3>الطلبات حسب الميزانية</h3><canvas id="chartBudget"></canvas></div>
+      <div class="chart-card"><h3>الطلبات حسب المصدر</h3><canvas id="chartSource"></canvas></div>
+      <div class="chart-card chart-wide"><h3>الطلبات يوميًا</h3><canvas id="chartDaily"></canvas></div>
+    </div>
+    <div class="conversion-box">
+      <span>معدل التحويل:</span>
+      <strong id="conversionRate">0%</strong>
+      <small>(طلبات ÷ زوار × 100)</small>
+    </div>
+  </section>
+
+  <!-- جدول الطلبات -->
+  <section class="requests-section">
+    <h2>📋 طلبات المشاريع</h2>
+    <div class="table-wrap">
+      <table class="requests-table">
+        <thead>
+          <tr>
+            <th>العميل</th>
+            <th>المشروع</th>
+            <th>النوع</th>
+            <th>الميزانية</th>
+            <th>التاريخ</th>
+            <th>الحالة</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="requestsBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ═══════ النافذة المنبثقة ═══════ -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">×</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ═══════ JavaScript ═══════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ═══════ إعدادات Firebase ═══════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDrlGEfR4LP5KznlXRZmqu1n5uLJdZsQxU",
+  authDomain: "test-a-e697a.firebaseapp.com",
+  projectId: "test-a-e697a",
+  storageBucket: "test-a-e697a.firebasestorage.app",
+  messagingSenderId: "539141653610",
+  appId: "1:539141653610:web:14c8fc3b1d373c0b393613"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ═══════ عناصر DOM ═══════ */
+const loginScreen = document.getElementById("loginScreen");
+const dashboard = document.getElementById("dashboard");
+const loginForm = document.getElementById("loginForm");
+const loginError = document.getElementById("loginError");
+const logoutBtn = document.getElementById("logoutBtn");
+const modal = document.getElementById("modal");
+const modalBody = document.getElementById("modalBody");
+const modalClose = document.getElementById("modalClose");
+
+/* ═══════ المصادقة ═══════ */
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loginError.textContent = "";
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    loginError.textContent = "بيانات الدخول غير صحيحة. حاول مرة أخرى.";
+  }
+});
+
+logoutBtn.addEventListener("click", () => signOut(auth));
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginScreen.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    loadDashboard();
+  } else {
+    loginScreen.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+  }
+});
+
+/* ═══════ التحميل ═══════ */
+let allRequests = [];
+let allVisitors = [];
+
+async function loadDashboard() {
+  try {
+    await Promise.all([loadRequests(), loadVisitors()]);
+    renderStats();
+    renderCharts();
+    renderTable();
+  } catch (e) {
+    console.error("خطأ في تحميل البيانات:", e);
+  }
+}
+
+async function loadRequests() {
+  const q = query(collection(db, "projectRequests"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  allRequests = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+async function loadVisitors() {
+  const q = query(collection(db, "visitors"), orderBy("timestamp", "desc"));
+  const snap = await getDocs(q);
+  allVisitors = snap.docs.map((d) => d.data());
+}
+
+/* ═══════ الإحصائيات ═══════ */
+function renderStats() {
+  const total = allRequests.length;
+  const count = (s) => allRequests.filter((r) => r.status === s).length;
+
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statNew").textContent = count("new");
+  document.getElementById("statContacted").textContent = count("contacted");
+  document.getElementById("statDiscussion").textContent = count("in_discussion");
+  document.getElementById("statAccepted").textContent = count("accepted");
+  document.getElementById("statRejected").textContent = count("rejected");
+
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfDay);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const toDate = (ts) => (ts?.toDate ? ts.toDate() : new Date(ts));
+
+  document.getElementById("statToday").textContent =
+    allRequests.filter((r) => toDate(r.createdAt) >= startOfDay).length;
+  document.getElementById("statWeek").textContent =
+    allRequests.filter((r) => toDate(r.createdAt) >= startOfWeek).length;
+  document.getElementById("statMonth").textContent =
+    allRequests.filter((r) => toDate(r.createdAt) >= startOfMonth).length;
+}
+
+/* ═══════ الرسوم البيانية ═══════ */
+function renderCharts() {
+  const toDate = (ts) => (ts?.toDate ? ts.toDate() : new Date(ts));
+  const gridColor = "rgba(255,255,255,0.05)";
+  const tickColor = "#6f6f96";
+
+  // الزيارات
+  const visitorDays = {};
+  allVisitors.forEach((v) => {
+    const d = toDate(v.timestamp).toISOString().slice(0, 10);
+    visitorDays[d] = (visitorDays[d] || 0) + 1;
+  });
+  const vLabels = Object.keys(visitorDays).sort().slice(-14);
+  new Chart(document.getElementById("chartVisitors"), {
+    type: "line",
+    data: {
+      labels: vLabels,
+      datasets: [{
+        label: "زيارات",
+        data: vLabels.map((d) => visitorDays[d]),
+        borderColor: "#00cec9",
+        backgroundColor: "rgba(0,206,201,0.15)",
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: "#00cec9"
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+
+  // الأنواع
+  const types = {};
+  allRequests.forEach((r) => { types[r.projectType || "غير محدد"] = (types[r.projectType || "غير محدد"] || 0) + 1; });
+  new Chart(document.getElementById("chartType"), {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(types),
+      datasets: [{
+        data: Object.values(types),
+        backgroundColor: ["#6c5ce7","#00cec9","#fd79a8","#fdcb6e","#e17055","#0984e3","#636e72","#d63031"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { color: tickColor, padding: 12, font: { size: 11 } } }
+      }
+    }
+  });
+
+  // الميزانية
+  const budgets = {};
+  allRequests.forEach((r) => {
+    const b = r.budget || "غير محدد";
+    budgets[b] = (budgets[b] || 0) + 1;
+  });
+  new Chart(document.getElementById("chartBudget"), {
+    type: "bar",
+    data: {
+      labels: Object.keys(budgets),
+      datasets: [{ data: Object.values(budgets), backgroundColor: "#6c5ce7", borderRadius: 8 }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tickColor, font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+
+  // المصدر
+  const sources = {};
+  allRequests.forEach((r) => {
+    const s = r.source || "غير محدد";
+    sources[s] = (sources[s] || 0) + 1;
+  });
+  new Chart(document.getElementById("chartSource"), {
+    type: "pie",
+    data: {
+      labels: Object.keys(sources),
+      datasets: [{
+        data: Object.values(sources),
+        backgroundColor: ["#6c5ce7","#00cec9","#fd79a8","#fdcb6e","#e17055","#0984e3","#636e72"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "bottom", labels: { color: tickColor, padding: 12, font: { size: 11 } } }
+      }
+    }
+  });
+
+  // يوميًا
+  const daily = {};
+  allRequests.forEach((r) => {
+    const d = toDate(r.createdAt).toISOString().slice(0, 10);
+    daily[d] = (daily[d] || 0) + 1;
+  });
+  const dLabels = Object.keys(daily).sort().slice(-30);
+  new Chart(document.getElementById("chartDaily"), {
+    type: "line",
+    data: {
+      labels: dLabels,
+      datasets: [{
+        label: "طلبات",
+        data: dLabels.map((d) => daily[d]),
+        borderColor: "#6c5ce7",
+        backgroundColor: "rgba(108,92,231,0.15)",
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: "#6c5ce7"
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor } },
+        y: { ticks: { color: tickColor, font: { size: 10 } }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+
+  // معدل التحويل
+  const totalVisitors = allVisitors.length || 1;
+  const rate = ((allRequests.length / totalVisitors) * 100).toFixed(2);
+  document.getElementById("conversionRate").textContent = rate + "%";
+}
+
+/* ═══════ الجدول ═══════ */
+const statusLabels = {
+  new: "جديد",
+  contacted: "تم التواصل",
+  in_discussion: "تحت المناقشة",
+  proposal_sent: "تم إرسال العرض",
+  accepted: "مقبول",
+  rejected: "مرفوض"
+};
+
+function renderTable() {
+  const tbody = document.getElementById("requestsBody");
+  if (allRequests.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:3rem 1rem">لا توجد طلبات حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = allRequests.map((r) => {
+    const date = r.createdAt?.toDate
+      ? r.createdAt.toDate().toLocaleDateString("ar-EG")
+      : "—";
+    return `
+      <tr>
+        <td>${escapeHtml(r.fullName) || "—"}</td>
+        <td>${escapeHtml(r.projectName) || "—"}</td>
+        <td>${escapeHtml(r.projectType) || "—"}</td>
+        <td>${escapeHtml(r.budget) || "—"}</td>
+        <td>${date}</td>
+        <td><span class="status-badge status-${r.status}">${statusLabels[r.status] || r.status}</span></td>
+        <td><button class="btn btn-small" onclick="window.openDetails('${r.id}')">تفاصيل</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+/* ═══════ أمان HTML ═══════ */
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/* ═══════ التفاصيل ═══════ */
+window.openDetails = (id) => {
+  const r = allRequests.find((x) => x.id === id);
+  if (!r) return;
+
+  const date = r.createdAt?.toDate
+    ? r.createdAt.toDate().toLocaleString("ar-EG")
+    : "—";
+  const phoneClean = (r.phone || "").replace(/\D/g, "");
+  const waClean = (r.whatsapp || r.phone || "").replace(/\D/g, "");
+
+  modalBody.innerHTML = `
+    <h2>${escapeHtml(r.projectName) || "مشروع بدون اسم"}</h2>
+    <div class="detail-grid">
+      <div><label>العميل</label><p>${escapeHtml(r.fullName) || "—"}</p></div>
+      <div><label>الهاتف</label><p>${escapeHtml(r.phone) || "—"}</p></div>
+      <div><label>واتساب</label><p>${escapeHtml(r.whatsapp) || "—"}</p></div>
+      <div><label>البريد</label><p>${escapeHtml(r.email) || "—"}</p></div>
+      <div><label>النوع</label><p>${escapeHtml(r.projectType) || "—"}</p></div>
+      <div><label>الميزانية</label><p>${escapeHtml(r.budget) || "—"}</p></div>
+      <div><label>الموعد</label><p>${escapeHtml(r.deadline) || "—"}</p></div>
+      <div><label>المصدر</label><p>${escapeHtml(r.source) || "—"}</p></div>
+      <div><label>التاريخ</label><p>${date}</p></div>
+      <div><label>الجهاز</label><p>${escapeHtml(r.device) || "—"}</p></div>
+    </div>
+    <div class="detail-section">
+      <label>وصف المشروع</label>
+      <p>${escapeHtml(r.projectDescription) || "—"}</p>
+    </div>
+    <div class="detail-section">
+      <label>المميزات المطلوبة</label>
+      <p>${escapeHtml(r.features) || "—"}</p>
+    </div>
+    <div class="detail-section">
+      <label>الجمهور المستهدف</label>
+      <p>${escapeHtml(r.targetAudience) || "—"}</p>
+    </div>
+    <div class="detail-section">
+      <label>ملاحظات إضافية</label>
+      <p>${escapeHtml(r.additionalNotes) || "—"}</p>
+    </div>
+    <div class="detail-actions">
+      ${waClean ? `<a href="https://wa.me/${waClean}" target="_blank" class="btn btn-whatsapp">💬 واتساب</a>` : ""}
+      ${phoneClean ? `<a href="tel:${phoneClean}" class="btn btn-call">📞 اتصال</a>` : ""}
+      ${r.email ? `<a href="mailto:${escapeHtml(r.email)}" class="btn btn-email">✉️ إيميل</a>` : ""}
+    </div>
+    <div class="status-changer">
+      <label>تغيير الحالة:</label>
+      <select id="statusSelect">
+        ${Object.entries(statusLabels).map(([k, v]) =>
+          `<option value="${k}" ${r.status === k ? "selected" : ""}>${v}</option>`
+        ).join("")}
+      </select>
+    </div>
+  `;
+
+  document.getElementById("statusSelect").addEventListener("change", (e) => {
+    window.changeStatus(r.id, e.target.value);
+  });
+
+  modal.classList.remove("hidden");
+};
+
+window.changeStatus = async (id, newStatus) => {
+  try {
+    await updateDoc(doc(db, "projectRequests", id), { status: newStatus });
+    const r = allRequests.find((x) => x.id === id);
+    if (r) r.status = newStatus;
+    renderStats();
+    renderTable();
+  } catch (e) {
+    alert("فشل تحديث الحالة. تأكد من الصلاحيات.");
+  }
+};
+
+modalClose.addEventListener("click", () => modal.classList.add("hidden"));
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) modal.classList.add("hidden");
+});
+</script>
+</body>
+</html>
